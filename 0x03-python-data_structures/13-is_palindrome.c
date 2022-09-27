@@ -1,94 +1,95 @@
 #include "lists.h"
 
-size_t list_len(listint_t *head);
-
-listint_t *add_node(listint_t **head, int num);
-
 /**
- * is_palindrome - Checks if a singly linked list is a palidrome
- * @head: The start of the list
+ * is_palindrome - checks if a linked list is a palindrome
+ * @head: pointer to the head of the linkedlist
  *
- * Return: 1 if is or 0 if not
+ * Return: 1 if is palindrom, 0 otherwise
  */
 int is_palindrome(listint_t **head)
 {
-	listint_t *current = *head;
-	listint_t *tmp_head = NULL;
-	listint_t *tmp_current = NULL;
-	size_t i = 0, len = list_len(*head);
+	listint_t *slowP = *head;
+	listint_t *fastP = *head;
+	listint_t *slowP_prev = *head;
+	listint_t *secondHalf, *mid_node = NULL;
+	int retval = 0;
 
-	if (*head == NULL || (*head)->next == NULL)
+	if (!head)
+		return (0);
+	if (!(*head) || !((*head)->next))
 		return (1);
-	while (i < (len / 2))
+	if (*head && (*head)->next)
 	{
-		add_node(&tmp_head, current->n);
-		current = current->next;
-		i++;
-	}
-	if ((len % 2) != 0)
-	{
-		current = current->next;
-		i++;
-	}
-	tmp_current = tmp_head;
-	while (i < len)
-	{
-		if (tmp_current->n == current->n)
+		while(fastP && fastP->next)
 		{
-			current = current->next;
-			tmp_current = tmp_current->next;
+			slowP_prev = slowP;
+			slowP = slowP->next;
+			fastP = fastP->next->next;
+		}
+		if (fastP)
+		{
+			mid_node = slowP;
+			slowP = slowP->next;
+		}
+		secondHalf = slowP;
+		slowP_prev->next = NULL;
+
+		reverse(&secondHalf);
+
+		retval = compareLists(*head, secondHalf);
+
+		reverse(&secondHalf);
+		if (mid_node)
+		{
+			slowP_prev->next = mid_node;
+			mid_node->next = secondHalf;
 		}
 		else
-		{
-			free_listint(tmp_head);
-			return (0);
-		}
-		i++;
+			slowP_prev->next = secondHalf;
 	}
-	free_listint(tmp_head);
-	return (1);
+	return (retval);
 }
 
 /**
- * list_len - Goes through a listint_t list
- * @head: The first node of the list
+ * compareLists - compare two lists
+ * @h1: pointer to the first list
+ * @h2: pointer to the second list
  *
- * Return: Always an unsigned int, the total number of nodes
+ * Return: 1 if both lists are the same 0 otherwise
  */
-size_t list_len(listint_t *head)
+int compareLists(listint_t *h1, listint_t *h2)
 {
-	unsigned int total = 0;
-	listint_t *current = head;
+	while (h1 && h2)
+	{
+		if (h1->n == h2->n)
+		{
+			h1 = h1->next;
+			h2 = h2->next;
+		}
+		else
+			return (0);
+	}
+	if (!h1 && !h2)
+		return (1);
+	return (0);
+}
 
-	if (head == NULL)
-		return (0);
+/**
+ * reverse - reverse a linkedlist
+ * @head: pointer to the head of the list
+ */
+void reverse(listint_t **head)
+{
+	listint_t *next = *head;
+	listint_t *current = *head;
+	listint_t *prev = NULL;
 
 	while (current)
 	{
-		total++;
-		current = current->next;
+		next = current->next;
+		current->next = prev;
+		prev = current;
+		current = next;
 	}
-
-	return (total);
-}
-
-/**
- * add_node - Adds a new node at the beginning of a list
- * @head: The first node of a list
- * @num: The integer for the new node
- *
- * Return: The address of the new node or NULL
- */
-listint_t *add_node(listint_t **head, int num)
-{
-	listint_t *new = malloc(sizeof(listint_t));
-
-	if (new == NULL)
-		return (NULL);
-
-	new->n = num;
-	new->next = *head;
-	*head = new;
-
-	return (*head);
+	*head = prev; 
 }
